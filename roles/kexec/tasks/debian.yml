@@ -1,0 +1,22 @@
+---
+
+# working, needs available version validation
+- name: Set Debian Architecture
+  set_fact:
+    arch: "{{ [ansible_architecture] | map('extract', deb_architecture) | first }}"
+
+- name: Set kernel URLs to retrieve image from
+  set_fact:
+    base_url: https://mirrors.edge.kernel.org
+    base_dir: debian/dists/{{ core_facts.os_version | default('bullseye', true) }}/main/installer-{{ arch }}/current/images/netboot/debian-installer/{{ arch }}
+
+- name: Retrieve operating system netboot files
+  ansible.builtin.get_url:
+    url: "{{ base_url }}/{{ base_dir }}/{{ item }}"
+    dest: "/tmp/{{ item }}"
+  with_items:
+    - linux
+    - initrd.gz
+
+- name: Load kernels and configuration into kexec
+  command: kexec -l /tmp/linux --initrd=/tmp/initrd.gz --command-line="mirror/suite={{ core_facts.os_version }} initrd=initrd.gz"

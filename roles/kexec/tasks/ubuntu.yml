@@ -1,0 +1,50 @@
+---
+
+- name: Set Ubuntu Architecture
+  set_fact:
+    arch: "{{ [ansible_architecture] | map('extract', deb_architecture) | first }}"
+
+- name: Set version path for Ubuntu Kernels
+  set_fact:
+    kernel_path: "{{ endpoints | json_query('\"' + target + '\".path')  }}"
+    iso_codename: "{{ endpoints | json_query('\"' + target + '\".codename')  }}"
+    iso_version: "{{ endpoints | json_query('\"' + target + '\".version')  }}"
+    kernel_filename: vmlinuz
+    initrd_filename: initrd
+  vars:
+    target: "ubuntu-netboot-{{ core_facts.os_version | default('22.04', true) }}-{{ arch }}"
+
+- name: Set version path for Ubuntu Kernels (Subiquity)
+  set_fact:
+    base_url: https://github.com/netbootxyz
+    iso_url: http://releases.ubuntu.com/{{ iso_codename }}/ubuntu-{{ iso_version }}-live-server-{{ arch }}.iso
+  when:
+   - core_facts.os_version is version('20.04', '>=')
+
+- name: Set auto_install vars for Debian Installer
+  set_fact:
+    auto_install: "auto=true priority=critical preseed/url={{ core_facts.os_config_url }}"
+  when:
+   - core_facts.os_version is version('20.04', '<')
+   - core_facts.os_config_url | length > 0
+
+- name: Set auto_install vars for Subiquity
+  set_fact:
+    auto_install: "autoinstall ds=nocloud-net;s={{ core_facts.os_config_url }}"
+  when:
+   - core_facts.os_version is version('20.04', '>=')
+   - core_facts.os_config_url | length > 0
+
+- name: Retrieve operating system netboot files
+  ansible.builtin.get_url:
+    url: "{{ base_url }}{{ kernel_path }}{{ item }}"
+    dest: "/tmp/{{ item }}"
+  with_items:
+    - "{{ kernel_filename }}"
+    - "{{ initrd_filename }}"
+
+- name: Load kernels and configuration into kexec
+  command: | 
+     kexec -l /tmp/{{ kernel_filename }} \
+     --initrd=/tmp/{{ initrd_filename }} \
+     --command-line="root=/dev/ram0 ramdisk_size=1500000 ip=dhcp url={{ iso_url }} {{ auto_install | default('', true) }} initrd={{ initrd_filename }}"

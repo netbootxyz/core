@@ -1,0 +1,23 @@
+---
+
+# working, needs available version validation
+
+- name: Set RHEL Architecture
+  ansible.builtin.set_fact:
+    arch: "{{ [ansible_architecture] | map('extract', rhel_architecture) | first }}"
+
+- name: Set kernel URLs to retrieve image from
+  ansible.builtin.set_fact:
+    base_url: http://repo.almalinux.org
+    base_dir: almalinux/{{ core_facts.os_version | default('9', true) }}/BaseOS/{{ arch }}/os
+
+- name: Retrieve operating system netboot files
+  ansible.builtin.get_url:
+    url: "{{ base_url }}/{{ base_dir }}/images/pxeboot/{{ item }}"
+    dest: "/tmp/{{ item }}"
+  with_items:
+    - vmlinuz
+    - initrd.img
+
+- name: Load kernels and configuration into kexec
+  ansible.builtin.command: kexec -l /tmp/vmlinuz --initrd=/tmp/initrd.img --command-line="inst.repo={{ base_url }}/{{ base_dir }} ip=dhcp initrd=initrd.img"

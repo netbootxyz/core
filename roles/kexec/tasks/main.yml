@@ -1,0 +1,39 @@
+---
+- name: Gather all facts
+  gather_facts: 
+
+- name: Ingest endpoints.yml
+  ansible.builtin.include_vars:
+    file: endpoints.yml
+
+- name: Ingest releases.yml
+  ansible.builtin.include_vars:
+    file: releases.yml
+
+# add flag for dhcp or static ip to pass through to booting operating system
+- name: Set core facts
+  ansible.builtin.set_fact:
+    core_facts:
+      os_name: "{{ ansible_facts.proc_cmdline.os_name | default('unset') }}"
+      os_version: "{{ ansible_facts.proc_cmdline.os_version | default('') }}"
+      os_flavor: "{{ ansible_facts.proc_cmdline.os_flavor | default('unset') }}"
+      os_config_url: "{{ ansible_facts.proc_cmdline.os_config_url | default('unset') }}"
+      os_net_interface: "{{ ansible_facts.proc_cmdline.os_net_interface | default('unset') }}"
+      os_net_vlan: "{{ ansible_facts.proc_cmdline.os_net_vlan | default('unset') }}"
+      os_console: "{{ ansible_facts.proc_cmdline.os_console | default('true') }}"
+
+- name: Display identified /proc/cmdline facts
+  debug:
+    var: core_facts
+
+- name: Load OS specific kexec playbook
+  ansible.builtin.include_tasks: "{{ core_facts.os_name }}.yml"
+  #ansible.builtin.include_tasks: ubuntu.yml
+
+- name: Brief sleep to allow log output to catch up
+  ansible.builtin.pause:
+    seconds: 5
+
+- name: Execute kexec to target kernel
+  command: kexec -e
+    

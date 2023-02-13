@@ -1,0 +1,23 @@
+---
+
+# working, needs available version validation
+
+- name: Set openSUSE Architecture
+  set_fact:
+    arch: "{{ [ansible_architecture] | map('extract', suse_architecture) | first }}"
+
+- name: Set kernel URLs to retrieve image from
+  set_fact:
+    base_url: http://download.opensuse.org
+    base_dir: distribution/leap/{{ core_facts.os_version | default('15.4', true) }}/repo/oss
+
+- name: Retrieve operating system netboot files
+  ansible.builtin.get_url:
+    url: "{{ base_url }}/{{ base_dir }}/boot/{{ arch }}/loader/{{ item }}"
+    dest: "/tmp/{{ item }}"
+  with_items:
+    - linux
+    - initrd
+
+- name: Load kernels and configuration into kexec
+  command: kexec -l /tmp/linux --initrd=/tmp/initrd --command-line="install={{ base_url }}/{{ base_dir }} netsetup=dhcp initrd=initrd"

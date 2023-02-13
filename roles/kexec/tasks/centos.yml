@@ -1,0 +1,24 @@
+---
+
+# working, needs available version validation
+
+- name: Set RHEL Architecture
+  set_fact:
+    arch: "{{ [ansible_architecture] | map('extract', rhel_architecture) | first }}"
+
+- name: Set kernel URLs to retrieve image from
+  set_fact:
+    base_url: https://mirrors.edge.kernel.org
+    base_dir: centos/{{ core_facts.os_version | default('7', true) }}/os/{{ arch }}
+    sub_dir: images/pxeboot
+
+- name: Retrieve operating system netboot files
+  ansible.builtin.get_url:
+    url: "{{ base_url }}/{{ base_dir }}/{{ sub_dir }}/{{ item }}"
+    dest: "/tmp/{{ item }}"
+  with_items:
+    - vmlinuz
+    - initrd.img
+
+- name: Load kernels and configuration into kexec
+  command: kexec -l /tmp/vmlinuz --initrd=/tmp/initrd.img --command-line="inst.repo={{ base_url }}/{{ base_dir }} ip=dhcp initrd=initrd.img"

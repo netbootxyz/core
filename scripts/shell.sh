@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo Building local core-shell environment image...
+docker build --platform linux/amd64  -t core-shell .
+echo Entering core-shell... type exit to leave container...
+docker run --platform linux/amd64 --privileged -v $(pwd):/ansible -it --entrypoint /bin/bash core-shell

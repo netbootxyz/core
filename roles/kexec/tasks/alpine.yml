@@ -1,0 +1,27 @@
+---
+
+# working, needs available version validation
+
+- name: Set Alpine Architecture
+  set_fact:
+    arch: "{{ [ansible_architecture] | map('extract', alpine_architecture) | first }}"
+
+- name: Set kernel URLs to retrieve image from
+  set_fact:
+    base_url: http://dl-cdn.alpinelinux.org
+    base_dir: alpine/v{{ core_facts.os_version | default('3.17', true) }}
+
+- name: Set netboot_dir fact
+  set_fact:
+    sub_dir: "{{ base_dir }}/releases/{{ arch }}/netboot"
+
+- name: Retrieve operating system netboot files
+  ansible.builtin.get_url:
+    url: "{{ base_url }}/{{ sub_dir }}/{{ item }}"
+    dest: "/tmp/{{ item }}"
+  with_items:
+    - vmlinuz-lts
+    - initramfs-lts
+
+- name: Load kernels and configuration into kexec
+  command: kexec -l /tmp/vmlinuz-lts --initrd=/tmp/initramfs-lts --command-line="alpine_repo={{ base_url }}/{{ base_dir }}/main modules=loop,squashfs modloop={{ base_url }}/{{ netboot_dir }}/modloop-lts quiet nomodeset ip=dhcp initrd=initramfs-lts"
