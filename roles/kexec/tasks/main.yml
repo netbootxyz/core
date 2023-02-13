@@ -14,21 +14,32 @@
 - name: Set core facts
   ansible.builtin.set_fact:
     core_facts:
-      os_name: "{{ ansible_facts.proc_cmdline.os_name | default('unset') }}"
+      os_name: "{{ ansible_facts.proc_cmdline.os_name | default('') }}"
       os_version: "{{ ansible_facts.proc_cmdline.os_version | default('') }}"
-      os_flavor: "{{ ansible_facts.proc_cmdline.os_flavor | default('unset') }}"
-      os_config_url: "{{ ansible_facts.proc_cmdline.os_config_url | default('unset') }}"
-      os_net_interface: "{{ ansible_facts.proc_cmdline.os_net_interface | default('unset') }}"
-      os_net_vlan: "{{ ansible_facts.proc_cmdline.os_net_vlan | default('unset') }}"
-      os_console: "{{ ansible_facts.proc_cmdline.os_console | default('true') }}"
+      os_flavor: "{{ ansible_facts.proc_cmdline.os_flavor | default('') }}"
+      os_config_url: "{{ ansible_facts.proc_cmdline.os_config_url | default('') }}"
+      os_net_interface: "{{ ansible_facts.proc_cmdline.os_net_interface | default('') }}"
+      os_net_vlan: "{{ ansible_facts.proc_cmdline.os_net_vlan | default('') }}"
+      os_net_ip: "{{ ansible_facts.proc_cmdline.os_net_ip | default('') }}"
+      os_net_nm: "{{ ansible_facts.proc_cmdline.os_net_nm | default('') }}"
+      os_net_gw: "{{ ansible_facts.proc_cmdline.os_net_gw | default('') }}"
+      os_net_dns: "{{ ansible_facts.proc_cmdline.os_net_dns | default('') }}"
+      os_console: "{{ ansible_facts.proc_cmdline.os_console | default('') }}"
 
 - name: Display identified /proc/cmdline facts
   debug:
     var: core_facts
 
+- name: Set static networking if os_net_ip is set
+  set_fact:
+    networking_info: "ip={{ core_facts.os_net_ip }}::{{ core_facts.os_net_gw }}:{{ core_facts.os_net_nm }}::::{{ core_facts.os_net_dns | default('8.8.8.8', true) }}"
+  when: 
+   - core_facts.os_net_ip | length > 0
+
 - name: Load OS specific kexec playbook
   ansible.builtin.include_tasks: "{{ core_facts.os_name }}.yml"
-  #ansible.builtin.include_tasks: ubuntu.yml
+  when: 
+   - core_facts.os_name | length > 0
 
 - name: Brief sleep to allow log output to catch up
   ansible.builtin.pause:
@@ -36,4 +47,5 @@
 
 - name: Execute kexec to target kernel
   command: kexec -e
-    
+  when:
+   - core_facts.os_name | length > 0

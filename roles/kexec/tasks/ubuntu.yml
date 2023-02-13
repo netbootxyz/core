@@ -21,7 +21,7 @@
   when:
    - core_facts.os_version is version('20.04', '>=')
 
-- name: Set auto_install vars for Debian Installer
+- name: Set auto_install vars for Legacy Debian Installer
   set_fact:
     auto_install: "auto=true priority=critical preseed/url={{ core_facts.os_config_url }}"
   when:
@@ -47,4 +47,4 @@
   command: | 
      kexec -l /tmp/{{ kernel_filename }} \
      --initrd=/tmp/{{ initrd_filename }} \
-     --command-line="root=/dev/ram0 ramdisk_size=1500000 ip=dhcp url={{ iso_url }} {{ auto_install | default('', true) }} initrd={{ initrd_filename }}"
+     --command-line="root=/dev/ram0 ramdisk_size=1500000 ip={{ networking_info | default('dhcp', true) }} url={{ iso_url }} {{ auto_install | default('', true) }} initrd={{ initrd_filename }}"
