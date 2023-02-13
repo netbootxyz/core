@@ -12,7 +12,7 @@ jobs:
   build-core:
     runs-on: ubuntu-latest
     container:
-      image: docker:20.10.21
+      image: docker:20.10.23
       env:
         DOCKER_DRIVER: overlay2
         DOCKER_TLS_CERTDIR: ""
