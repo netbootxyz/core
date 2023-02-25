@@ -1,0 +1,30 @@
+---
+
+# testing
+
+- name: Set RHEL Architecture
+  set_fact:
+    arch: "{{ [ansible_architecture] | map('extract', rhel_architecture) | first }}"
+
+- name: Set kernel URLs to retrieve image from
+  set_fact:
+    base_url: https://mirrors.edge.kernel.org
+    base_dir: fedora/releases/{{ core_facts.os_version | default('37', true) }}/Server/{{ arch }}
+    sub_dir: os/images/pxeboot
+
+- name: Set auto_install vars for Fedora
+  set_fact:
+    auto_install: "inst.ks={{ core_facts.os_config_url }}"
+  when:
+   - core_facts.os_config_url | length > 0
+
+- name: Retrieve operating system netboot files
+  ansible.builtin.get_url:
+    url: "{{ base_url }}/{{ base_dir }}/{{ sub_dir }}/{{ item }}"
+    dest: "/tmp/{{ item }}"
+  with_items:
+    - vmlinuz
+    - initrd.img
+
+- name: Load kernels and configuration into kexec
+  command: kexec -l /tmp/vmlinuz --initrd=/tmp/initrd.img --command-line="inst.text inst.repo={{ base_url }}/{{ base_dir }} {{ auto_install | default('', true) }} ip=dhcp initrd=initrd.img"

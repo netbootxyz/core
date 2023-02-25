@@ -18,3 +18,6 @@ suse_architecture:
   x86_64: x86_64
   i386: i586
   aarch64: aarch64
+
+endpoints_url: https://github.com/netbootxyz/netboot.xyz/blob/master/endpoints.yml
+releases_url: https://github.com/netbootxyz/netboot.xyz/blob/master/roles/netbootxyz/defaults/main.yml
