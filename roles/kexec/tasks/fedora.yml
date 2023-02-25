@@ -9,8 +9,8 @@
 - name: Set kernel URLs to retrieve image from
   set_fact:
     base_url: https://mirrors.edge.kernel.org
-    base_dir: fedora/releases/{{ core_facts.os_version | default('37', true) }}/Server/{{ arch }}
-    sub_dir: os/images/pxeboot
+    base_dir: fedora/releases/{{ core_facts.os_version | default('37', true) }}/Server/{{ arch }}/os
+    sub_dir: images/pxeboot
 
 - name: Set auto_install vars for Fedora
   set_fact:
