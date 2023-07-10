@@ -2,9 +2,19 @@
 - name: Gather all facts
   gather_facts: 
 
+- name: Retrieve latest endpoints.yml
+  ansible.builtin.get_url:
+    url: "{{ endpoints_url }}"
+    dest: endpoints.yml
+
 - name: Ingest endpoints.yml
   ansible.builtin.include_vars:
     file: endpoints.yml
+
+- name: Retrieve latest releases.yml
+  ansible.builtin.get_url:
+    url: "{{ releases_url }}"
+    dest: releases.yml
 
 - name: Ingest releases.yml
   ansible.builtin.include_vars:
@@ -24,7 +34,7 @@
       os_net_nm: "{{ ansible_facts.proc_cmdline.os_net_nm | default('') }}"
       os_net_gw: "{{ ansible_facts.proc_cmdline.os_net_gw | default('') }}"
       os_net_dns: "{{ ansible_facts.proc_cmdline.os_net_dns | default('') }}"
-      os_console: "{{ ansible_facts.proc_cmdline.os_console | default('') }}"
+      os_console: "{{ ansible_facts.proc_cmdline.console | default('') }}"
 
 - name: Display identified /proc/cmdline facts
   debug:
