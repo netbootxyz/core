@@ -1,6 +1,6 @@
 ---
 
-# testing
+# working, needs networking and available version validation
 
 - name: Set RHEL Architecture
   set_fact:
@@ -27,4 +27,7 @@
     - initrd.img
 
 - name: Load kernels and configuration into kexec
-  command: kexec -l /tmp/vmlinuz --initrd=/tmp/initrd.img --command-line="inst.text inst.repo={{ base_url }}/{{ base_dir }} {{ auto_install | default('', true) }} ip=dhcp initrd=initrd.img"
+  command: | 
+    kexec -l /tmp/vmlinuz \
+    --initrd=/tmp/initrd.img \
+    --command-line="inst.text inst.repo={{ base_url }}/{{ base_dir }} {{ auto_install | default('', true) }} ip=dhcp initrd=initrd.img {{ core_facts.os_console }}"
