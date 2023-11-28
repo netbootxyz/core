@@ -1,7 +1,7 @@
 FROM alpine:3.18
 
 # renovate: datasource=pypi depName=ansible
-ARG ANSIBLE_VERSION="8.6.1"
+ARG ANSIBLE_VERSION="9.0.1"
 
 RUN \
  echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
