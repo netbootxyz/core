@@ -1,13 +1,13 @@
-FROM alpine:3.18
+FROM alpine:3.21
 
 # renovate: datasource=pypi depName=ansible
 ARG ANSIBLE_VERSION="9.0.1"
 
 RUN \
- echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
  apk update && \
  apk add bash dmidecode hwinfo kexec-tools lshw py3-jmespath py3-pip usbutils unzip wget && \
  rm -vrf /var/cache/apk/* && \
+ rm -rf /usr/lib/python3.12/EXTERNALLY-MANAGED && \
  pip install --no-cache-dir --upgrade pip && \
  pip install --no-cache-dir ansible==${ANSIBLE_VERSION}
  
