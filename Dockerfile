@@ -1,7 +1,7 @@
 FROM alpine:3.21
 
 # renovate: datasource=pypi depName=ansible
-ARG ANSIBLE_VERSION="9.0.1"
+ARG ANSIBLE_VERSION="9.13.0"
 
 RUN \
  apk update && \
